@@ -48,7 +48,7 @@ class TedeeClient(object):
             timeout=self._timeout)
         try:
             self._token = r.json()["access_token"]
-            _LOGGER.error("result: %s", r.json())
+            #_LOGGER.debug("result: %s", r.json())
         except KeyError:
             raise TedeeClientException("Authentication not successfull")
         
