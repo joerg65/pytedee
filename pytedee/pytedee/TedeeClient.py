@@ -8,6 +8,7 @@ import logging
 import requests
 import sys
 import datetime
+from threading import Timer
 
 from .Lock import Lock
 from .Lock import State
@@ -101,7 +102,11 @@ class TedeeClient(object):
             if success:
                 lock.set_state(State.Unlocked)
                 _LOGGER.debug("unlock command successful, id: %d ", id)
-        
+            
+                t = Timer(2, self.get_state)
+                t.start()
+
+            
     def lock(self, id):
         ''''Lock method'''
         for lock in self._sensor_list:
@@ -122,6 +127,9 @@ class TedeeClient(object):
             if success:
                 lock.set_state(State.Locked)
                 _LOGGER.debug("lock command successful, id: %d ", id)
+                
+                t = Timer(2, self.get_state)
+                t.start()
         
     def open(self, id):
         '''Open the door latch'''
@@ -143,7 +151,10 @@ class TedeeClient(object):
             if success:
                 lock.set_state(State.Unlocked)
                 _LOGGER.debug("open command successful, id: %d ", id)
-    
+
+                t = Timer(5, self.get_state)
+                t.start()
+                
     def is_unlocked(self, id):
         for lock in self._sensor_list:
             if id == lock.get_id():
@@ -203,15 +214,12 @@ class TedeeClient(object):
                         _LOGGER.debug("Id: %s, State: %d, battery: %d", state["id"], lockProperties ["state"], lockProperties["batteryLevel"])
                         battery_level = lockProperties["batteryLevel"]
                         lock.set_battery_level(battery_level)
-                        state = lockProperties["state"]
                         '''Todo: do something with state'''
-                        '''lock.set_state()'''
+                        lock.set_state(lockProperties["state"])
                         break
-                
         except KeyError:
             _LOGGER.error("result: %s", r.json())
             
-   
     def is_token_valid(self):
         return self._token_valid_until > datetime.datetime.now()
                       
@@ -220,7 +228,7 @@ class TedeeClient(object):
             _LOGGER.debug("Need new token...")
             self.get_token()
         if (self.is_token_valid() == True):
-            self.get_state();
+            self.get_state()
             return self.get_battery(id)
         else:
             return False

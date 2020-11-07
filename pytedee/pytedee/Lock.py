@@ -9,8 +9,9 @@ from enum import Enum
 
 class State(Enum):
     Unknown = 0
-    Locked = 1
-    Unlocked = 2
+    Inbetween = 2
+    Locked = 6
+    Unlocked = 5
 
     
 class Lock(object):
@@ -35,10 +36,10 @@ class Lock(object):
         return self._id
     
     def is_state_locked(self):
-        return self._status == State.locked
+        return self._status == State.Locked
     
     def is_state_unlocked(self):
-        return self._status == State.unlocked
+        return self._status == State.Unlocked
     
     def get_state(self):
         return self._state
