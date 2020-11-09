@@ -11,7 +11,7 @@ import datetime
 from threading import Timer
 
 from .Lock import Lock
-from .Lock import State
+#from .Lock import State
 from .TedeeClientException import TedeeClientException
 
 
@@ -48,7 +48,7 @@ class TedeeClient(object):
             timeout=self._timeout)
         try:
             self._token = r.json()["access_token"]
-            #_LOGGER.debug("result: %s", r.json())
+            _LOGGER.error("result: %s", r.json())
         except KeyError:
             raise TedeeClientException("Authentication not successfull")
         
@@ -100,7 +100,7 @@ class TedeeClient(object):
             
             success = r.json()["success"]
             if success:
-                lock.set_state(State.Unlocked)
+                lock.set_state(2)
                 _LOGGER.debug("unlock command successful, id: %d ", id)
             
                 t = Timer(2, self.get_state)
@@ -125,7 +125,7 @@ class TedeeClient(object):
             
             success = r.json()["success"]
             if success:
-                lock.set_state(State.Locked)
+                lock.set_state(6)
                 _LOGGER.debug("lock command successful, id: %d ", id)
                 
                 t = Timer(2, self.get_state)
@@ -149,7 +149,7 @@ class TedeeClient(object):
 
             success = r.json()["success"]
             if success:
-                lock.set_state(State.Unlocked)
+                lock.set_state(2)
                 _LOGGER.debug("open command successful, id: %d ", id)
 
                 t = Timer(5, self.get_state)
@@ -162,8 +162,7 @@ class TedeeClient(object):
                 break
         if payload == None:
             raise TedeeClientException("This Id not found")
-        
-        return lock.get_state() == State.Unlocked
+        return lock.get_state() == 2
     
     def is_locked(self, id):
         for lock in self._sensor_list:
@@ -172,8 +171,7 @@ class TedeeClient(object):
                 break
         if payload == None:
             raise TedeeClientException("This Id not found")
-        
-        return lock.get_state() == State.Locked
+        return lock.get_state() == 6
     
     def get_battery(self, id):
         for lock in self._sensor_list:
@@ -232,8 +230,7 @@ class TedeeClient(object):
             return self.get_battery(id)
         else:
             return False
-
-        
+    
 auth_url = "https://tedee.b2clogin.com/tedee.onmicrosoft.com/B2C_1_SignIn_Ropc/oauth2/v2.0/token"
 auth_parameters = {
     "grant_type": "password",
@@ -246,6 +243,7 @@ api_url_open = "https://api.tedee.com/api/v1.15/my/lock/open"
 api_url_close = "https://api.tedee.com/api/v1.15/my/lock/close"
 api_url_pull = "https://api.tedee.com/api/v1.15/my/lock/pull-spring"
 
+
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
 
@@ -256,3 +254,4 @@ handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 root.addHandler(handler)
+

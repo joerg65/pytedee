@@ -7,11 +7,10 @@ Created on 02.11.2020
 from enum import Enum
 
 
-class State(Enum):
+'''class State(Enum):
     Unknown = 0
-    Inbetween = 2
     Locked = 6
-    Unlocked = 5
+    Unlocked = 2'''
 
     
 class Lock(object):
@@ -25,7 +24,7 @@ class Lock(object):
         '''
         self._name = name
         self._id = id
-        self._state = State.Unknown
+        self._state = 0
         self._battery_level = None
         self._is_connected = False
         
@@ -36,10 +35,10 @@ class Lock(object):
         return self._id
     
     def is_state_locked(self):
-        return self._status == State.Locked
+        return self._status == 6
     
     def is_state_unlocked(self):
-        return self._status == State.Unlocked
+        return self._status == 2
     
     def get_state(self):
         return self._state
