@@ -10,10 +10,12 @@ import sys
 import datetime
 from threading import Timer
 
-from .Lock import Lock
-#from .Lock import State
-from .TedeeClientException import TedeeClientException
-
+try:
+    from .Lock import Lock
+    from .TedeeClientException import TedeeClientException
+except:
+    from Lock import Lock
+    from TedeeClientException import TedeeClientException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +50,8 @@ class TedeeClient(object):
             timeout=self._timeout)
         try:
             self._token = r.json()["access_token"]
-            _LOGGER.error("result: %s", r.json())
+            #_LOGGER.error("result: %s", r.json())
+            _LOGGER.debug("Got new token.")
         except KeyError:
             raise TedeeClientException("Authentication not successfull")
         
@@ -245,12 +248,9 @@ api_url_pull = "https://api.tedee.com/api/v1.15/my/lock/pull-spring"
 
 
 root = logging.getLogger()
-root.setLevel(logging.DEBUG)
-
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("pytedee").setLevel(logging.WARNING)
 handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.DEBUG)
-#handler.setLevel(logging.ERROR)
-#handler.setLevel(logging.NOTSET)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 root.addHandler(handler)
