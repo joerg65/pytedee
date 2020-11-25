@@ -9,8 +9,12 @@ from enum import Enum
 
 '''class State(Enum):
     Unknown = 0
+    Unlocked = 2
+	Half Open = 3
+	Unlocking = 4
+	Locking = 5
     Locked = 6
-    Unlocked = 2'''
+	Pull = 7'''
 
     
 class Lock(object):
