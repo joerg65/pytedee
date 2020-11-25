@@ -66,18 +66,18 @@ class TedeeClient(object):
         
     def get_devices(self):
         '''Get the list of registered locks'''
-        r = requests.get(api_url_devices, headers=self._api_header,
+        api_url_lock = "https://api.tedee.com/api/v1.15/my/lock"
+        r = requests.get(api_url_lock, headers=self._api_header,
             timeout=self._timeout)
-        _LOGGER.debug("Devices %s", r.json())
+        _LOGGER.debug("Locks %s", r.json())
         result = r.json()["result"]
         for x in result:
             id = x["id"]
             name = x["name"]
-            if "Lock" in name:
-                self._lock_id = id
-                '''store the found lock in _sensor_list and get the battery_level'''
-                self._sensor_list.append(Lock(name, id))
-                self.get_battery(id)
+            self._lock_id = id
+            '''store the found lock in _sensor_list and get the battery_level'''
+            self._sensor_list.append(Lock(name, id))
+            self.get_battery(id)
         if self._lock_id == None:
             raise TedeeClientException("No lock found")
     
@@ -254,4 +254,3 @@ handler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 root.addHandler(handler)
-
