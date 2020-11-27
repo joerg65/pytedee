@@ -71,13 +71,26 @@ class TedeeClient(object):
             timeout=self._timeout)
         _LOGGER.debug("Locks %s", r.json())
         result = r.json()["result"]
-        for x in result:
+
+        for x in result:            
             id = x["id"]
             name = x["name"]
+            isConnected = x["isConnected"]
+            state = x["lockProperties"]["state"]
+            batteryLevel = x["lockProperties"]["batteryLevel"]
+            isCharging = x["lockProperties"]["isCharging"]
+
+            lock = Lock(name, id)
+            lock.set_connected(isConnected)
+            lock.set_state(state)
+            lock.set_battery_level(batteryLevel)
+            lock.set_is_charging(isCharging)
+
             self._lock_id = id
             '''store the found lock in _sensor_list and get the battery_level'''
-            self._sensor_list.append(Lock(name, id))
-            self.get_battery(id)
+
+            self._sensor_list.append(lock)
+
         if self._lock_id == None:
             raise TedeeClientException("No lock found")
     
@@ -87,17 +100,10 @@ class TedeeClient(object):
     
     def unlock(self, id):
         '''Unlock method'''
-        for lock in self._sensor_list:
-            if id == lock.get_id():
-                payload = {"deviceId":id}
-                break
-        if payload == None:
-            raise TedeeClientException("This Id not found")
+        if (self.is_lock_exists(id) == True):
+            payload = {"deviceId":id}
 
-        if (self.is_token_valid() == False):
-            self.get_token()
-            
-        if (self.is_token_valid() == True):
+        if (self.ensure_token_is_valid() == True):
             r = requests.post(api_url_open, headers=self._api_header, data=json.dumps(payload),
             timeout=self._timeout)
             
@@ -108,7 +114,6 @@ class TedeeClient(object):
             
                 t = Timer(2, self.get_state)
                 t.start()
-
             
     def lock(self, id):
         ''''Lock method'''
@@ -119,10 +124,7 @@ class TedeeClient(object):
         if payload == None:
             raise TedeeClientException("This Id not found")
 
-        if (self.is_token_valid() == False):
-            self.get_token()
-            
-        if (self.is_token_valid() == True):
+        if (self.ensure_token_is_valid() == True):
             r = requests.post(api_url_close, headers=self._api_header, data=json.dumps(payload),
             timeout=self._timeout)
             
@@ -143,10 +145,7 @@ class TedeeClient(object):
         if payload == None:
             raise TedeeClientException("This Id not found")
 
-        if (self.is_token_valid() == False):
-            self.get_token()
-            
-        if (self.is_token_valid() == True):
+        if (self.ensure_token_is_valid() == True):
             r = requests.post(api_url_pull, headers=self._api_header, data=json.dumps(payload),
             timeout=self._timeout)
 
@@ -223,6 +222,17 @@ class TedeeClient(object):
             
     def is_token_valid(self):
         return self._token_valid_until > datetime.datetime.now()
+
+    def ensure_token_is_valid(self):
+        if (self.is_token_valid() == False):
+            self.get_token()
+        return self.is_token_valid() == True
+
+    def is_lock_exists(self, id):
+        for lock in self._sensor_list:
+            if id == lock.get_id():
+                return True
+        raise TedeeClientException("This Id not found")
                       
     def update(self, id):
         if (self.is_token_valid() == False):
