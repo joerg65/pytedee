@@ -100,8 +100,8 @@ class TedeeClient(object):
     
     def unlock(self, id):
         '''Unlock method'''
-        if (self.is_lock_exists(id) == True):
-            payload = {"deviceId":id}
+        lock = self.find_lock(id)
+        payload = {"deviceId":id}
 
         if (self.ensure_token_is_valid() == True):
             r = requests.post(api_url_open, headers=self._api_header, data=json.dumps(payload),
@@ -117,12 +117,8 @@ class TedeeClient(object):
             
     def lock(self, id):
         ''''Lock method'''
-        for lock in self._sensor_list:
-            if id == lock.get_id():
-                payload = {"deviceId":id}
-                break
-        if payload == None:
-            raise TedeeClientException("This Id not found")
+        lock = self.find_lock(id)
+        payload = {"deviceId":id}
 
         if (self.ensure_token_is_valid() == True):
             r = requests.post(api_url_close, headers=self._api_header, data=json.dumps(payload),
@@ -138,12 +134,8 @@ class TedeeClient(object):
         
     def open(self, id):
         '''Open the door latch'''
-        for lock in self._sensor_list:
-            if id == lock.get_id():
-                payload = {"deviceId":id}
-                break
-        if payload == None:
-            raise TedeeClientException("This Id not found")
+        lock = self.find_lock(id)
+        payload = {"deviceId":id}
 
         if (self.ensure_token_is_valid() == True):
             r = requests.post(api_url_pull, headers=self._api_header, data=json.dumps(payload),
@@ -158,30 +150,17 @@ class TedeeClient(object):
                 t.start()
                 
     def is_unlocked(self, id):
-        for lock in self._sensor_list:
-            if id == lock.get_id():
-                payload = {"deviceId":id}
-                break
-        if payload == None:
-            raise TedeeClientException("This Id not found")
+        lock = self.find_lock(id)
         return lock.get_state() == 2
     
     def is_locked(self, id):
-        for lock in self._sensor_list:
-            if id == lock.get_id():
-                payload = {"deviceId":id}
-                break
-        if payload == None:
-            raise TedeeClientException("This Id not found")
+        lock = self.find_lock(id)
         return lock.get_state() == 6
     
     def get_battery(self, id):
-        for lock in self._sensor_list:
-            if id == lock.get_id():
-                payload = {"deviceId":id}
-                break
-        if payload == None:
-            raise TedeeClientException("This Id not found")
+        lock = self.find_lock(id)
+        payload = {"deviceId":id}
+        
         api_url_battery = "https://api.tedee.com/api/v1.15/my/device/" + str(id) + "/battery"
         r = requests.get(api_url_battery, headers=self._api_header,
             timeout=self._timeout)
@@ -228,10 +207,10 @@ class TedeeClient(object):
             self.get_token()
         return self.is_token_valid() == True
 
-    def is_lock_exists(self, id):
+    def find_lock(self, id):
         for lock in self._sensor_list:
             if id == lock.get_id():
-                return True
+                return lock
         raise TedeeClientException("This Id not found")
                       
     def update(self, id):
