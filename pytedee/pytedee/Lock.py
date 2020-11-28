@@ -31,6 +31,7 @@ class Lock(object):
         self._state = 0
         self._battery_level = None
         self._is_connected = False
+        self._is_charging = False
         
     def get_name(self):
         return self._name
@@ -39,10 +40,10 @@ class Lock(object):
         return self._id
     
     def is_state_locked(self):
-        return self._status == 6
+        return self._state == 6
     
     def is_state_unlocked(self):
-        return self._status == 2
+        return self._state == 2
     
     def get_state(self):
         return self._state
@@ -61,3 +62,9 @@ class Lock(object):
     
     def is_connected(self):
         return self._is_connected
+    
+    def get_is_charging(self):
+        return self._is_charging
+    
+    def set_is_charging(self, isCharging):
+        self._is_charging = isCharging
