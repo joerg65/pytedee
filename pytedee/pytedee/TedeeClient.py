@@ -79,13 +79,17 @@ class TedeeClient(object):
             state = x["lockProperties"]["state"]
             batteryLevel = x["lockProperties"]["batteryLevel"]
             isCharging = x["lockProperties"]["isCharging"]
-
+            isEnabledPullSpring =x["deviceSettings"]["pullSpringEnabled"]
+            durationPullSpring =x["deviceSettings"]["pullSpringDuration"]
+            
             lock = Lock(name, id)
             lock.set_connected(isConnected)
             lock.set_state(state)
             lock.set_battery_level(batteryLevel)
             lock.set_is_charging(isCharging)
-
+            lock.set_is_enabled_pullspring(isEnabledPullSpring)
+            lock.set_duration_pullspring(durationPullSpring)
+            
             self._lock_id = id
             '''store the found lock in _sensor_list and get the battery_level'''
 
@@ -146,7 +150,7 @@ class TedeeClient(object):
                 lock.set_state(2)
                 _LOGGER.debug("open command successful, id: %d ", id)
 
-                t = Timer(5, self.get_state)
+                t = Timer(lock.get_duration_pullspring() + 1, self.get_state)
                 t.start()
                 
     def is_unlocked(self, id):

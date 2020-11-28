@@ -68,3 +68,15 @@ class Lock(object):
     
     def set_is_charging(self, isCharging):
         self._is_charging = isCharging
+        
+    def set_is_enabled_pullspring(self, isEnabled):
+        self._is_enabled_pullspring = isEnabled
+        
+    def get_is_enabled_pullspring(self):
+        return self._is_enabled_pullspring
+        
+    def set_duration_pullspring(self, duration):
+        self._duration_pullspring = duration
+        
+    def get_duration_pullspring(self):
+        return self._duration_pullspring
