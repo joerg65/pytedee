@@ -197,8 +197,8 @@ class TedeeClient(object):
 
 api_url_base = "https://api.tedee.com/api/v1.22/"
 api_url_devices = api_url_base+"my/device"
-api_url_open = api_url_base+"my/lock/"+LOCK_ID+"/operation/lock"
-api_url_close = api_url_base+"my/lock/"+LOCK_ID+"/operation/unlock"
+api_url_open = api_url_base+"my/lock/"+LOCK_ID+"/operation/unlock"
+api_url_close = api_url_base+"my/lock/"+LOCK_ID+"/operation/lock"
 api_url_pull = api_url_base+"my/lock/"+LOCK_ID+"/operation/pull"
 api_url_battery = api_url_base+"my/device/"+LOCK_ID+"/battery"
 api_url_state = api_url_base+"my/lock/sync"
