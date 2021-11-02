@@ -9,12 +9,10 @@ from pytedee.Lock import Lock
 from pytedee.TedeeClientException import TedeeClientException
 
 '''Tedee Credentials'''
-username = "username"
-password = "password"
+personalToken = "<<user personal token>>"
 
-client = TedeeClient(username, password)
-print ("Token: " + str(client._token))
-print ("Token valid: " + str(client._token_valid_until))
+client = TedeeClient(personalToken)
+print ("Token: " + str(client._personalToken))
 locks = client.get_locks()
 for lock in locks:
     print("----------------------------------------------")

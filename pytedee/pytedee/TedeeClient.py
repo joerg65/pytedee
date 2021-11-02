@@ -20,53 +20,27 @@ except:
 _LOGGER = logging.getLogger(__name__)
 
 TIMEOUT = 10
-
+LOCK_ID = '#lockid#'
     
 class TedeeClient(object):
     '''Classdocs'''
 
-    def __init__(self, username, password, timeout=TIMEOUT):
+    def __init__(self, personalToken, timeout=TIMEOUT):
         '''Constructor'''
         self._available = False
-        self._username = username
-        self._password = password
-        self._token = None
+        self._personalToken = personalToken
         self._sensor_list = []
         self._timeout = timeout
         self._lock_id = None
-        self._token_valid_until = datetime.datetime.now()
-        
-        self.get_token()
-        
-        if (self.is_token_valid() == True):
-            self.get_devices()
 
-    def get_token(self, **kwargs):
-        self._have_token = False
-        auth_parameters["username"] = self._username
-        auth_parameters["password"] = self._password
-        self._token = None
-        r = requests.post(auth_url, params=auth_parameters, headers=auth_header,
-            timeout=self._timeout)
-        try:
-            self._token = r.json()["access_token"]
-            #_LOGGER.error("result: %s", r.json())
-            _LOGGER.debug("Got new token.")
-        except KeyError:
-            raise TedeeClientException("Authentication not successfull")
-        
         '''Create the api header with new token'''
-        self._api_header = {"Content-Type": "application/json", "Authorization": "Bearer " + self._token}
+        self._api_header = {"Content-Type": "application/json", "Authorization": "PersonalKey " + self._personalToken}
         
-        '''Store the date when actual token expires'''
-        expires = int(r.json()["expires_in"])
-        
-        self._token_valid_until = datetime.datetime.now() + datetime.timedelta(seconds=expires)
-        _LOGGER.debug("Token valid until: %s", self._token_valid_until)
-        
+        self.get_devices()
+
     def get_devices(self):
         '''Get the list of registered locks'''
-        api_url_lock = "https://api.tedee.com/api/v1.15/my/lock"
+        api_url_lock = api_url_base+"my/lock"
         r = requests.get(api_url_lock, headers=self._api_header,
             timeout=self._timeout)
         _LOGGER.debug("Locks %s", r.json())
@@ -76,9 +50,9 @@ class TedeeClient(object):
             id = x["id"]
             name = x["name"]
             isConnected = x["isConnected"]
-            state = x["lockProperties"]["state"]
-            batteryLevel = x["lockProperties"]["batteryLevel"]
-            isCharging = x["lockProperties"]["isCharging"]
+            state = self.assign_null_or_lock_state(x["lockProperties"])
+            batteryLevel = self.assign_null_or_lock_batteryLevel(x["lockProperties"])
+            isCharging = self.assign_null_or_lock_isCharging(x["lockProperties"])
             isEnabledPullSpring =x["deviceSettings"]["pullSpringEnabled"]
             durationPullSpring =x["deviceSettings"]["pullSpringDuration"]
             
@@ -105,53 +79,47 @@ class TedeeClient(object):
     def unlock(self, id):
         '''Unlock method'''
         lock = self.find_lock(id)
-        payload = {"deviceId":id}
 
-        if (self.ensure_token_is_valid() == True):
-            r = requests.post(api_url_open, headers=self._api_header, data=json.dumps(payload),
-            timeout=self._timeout)
-            
-            success = r.json()["success"]
-            if success:
-                lock.set_state(2)
-                _LOGGER.debug("unlock command successful, id: %d ", id)
-            
-                t = Timer(2, self.get_state)
-                t.start()
+        r = requests.post(api_url_open.replace(LOCK_ID, str(id)), headers=self._api_header,
+        timeout=self._timeout)
+        
+        success = r.json()["success"]
+        if success:
+            lock.set_state(2)
+            _LOGGER.debug("unlock command successful, id: %d ", id)
+        
+            t = Timer(2, self.get_state)
+            t.start()
             
     def lock(self, id):
         ''''Lock method'''
         lock = self.find_lock(id)
-        payload = {"deviceId":id}
 
-        if (self.ensure_token_is_valid() == True):
-            r = requests.post(api_url_close, headers=self._api_header, data=json.dumps(payload),
-            timeout=self._timeout)
+        r = requests.post(api_url_close.replace(LOCK_ID, str(id)), headers=self._api_header,
+        timeout=self._timeout)
+        
+        success = r.json()["success"]
+        if success:
+            lock.set_state(6)
+            _LOGGER.debug("lock command successful, id: %d ", id)
             
-            success = r.json()["success"]
-            if success:
-                lock.set_state(6)
-                _LOGGER.debug("lock command successful, id: %d ", id)
-                
-                t = Timer(2, self.get_state)
-                t.start()
+            t = Timer(2, self.get_state)
+            t.start()
         
     def open(self, id):
         '''Open the door latch'''
         lock = self.find_lock(id)
-        payload = {"deviceId":id}
 
-        if (self.ensure_token_is_valid() == True):
-            r = requests.post(api_url_pull, headers=self._api_header, data=json.dumps(payload),
-            timeout=self._timeout)
+        r = requests.post(api_url_pull.replace(LOCK_ID, str(id)), headers=self._api_header,
+        timeout=self._timeout)
 
-            success = r.json()["success"]
-            if success:
-                lock.set_state(2)
-                _LOGGER.debug("open command successful, id: %d ", id)
+        success = r.json()["success"]
+        if success:
+            lock.set_state(2)
+            _LOGGER.debug("open command successful, id: %d ", id)
 
-                t = Timer(lock.get_duration_pullspring() + 1, self.get_state)
-                t.start()
+            t = Timer(lock.get_duration_pullspring() + 1, self.get_state)
+            t.start()
                 
     def is_unlocked(self, id):
         lock = self.find_lock(id)
@@ -163,10 +131,8 @@ class TedeeClient(object):
     
     def get_battery(self, id):
         lock = self.find_lock(id)
-        payload = {"deviceId":id}
         
-        api_url_battery = "https://api.tedee.com/api/v1.15/my/device/" + str(id) + "/battery"
-        r = requests.get(api_url_battery, headers=self._api_header,
+        r = requests.get(api_url_battery.replace(LOCK_ID, str(id)), headers=self._api_header,
             timeout=self._timeout)
         _LOGGER.debug("result: %s", r.json())
         result = r.json()["result"]
@@ -183,7 +149,6 @@ class TedeeClient(object):
             return False
             
     def get_state(self):
-        api_url_state = "https://api.tedee.com/api/v1.15/my/lock/sync"
         r = requests.get(api_url_state, headers=self._api_header)
         states = r.json()["result"]
         try:
@@ -194,51 +159,49 @@ class TedeeClient(object):
                     if id == lock.get_id():
                         lock.set_connected(is_connected)
                         lockProperties = state["lockProperties"]
-                        _LOGGER.debug("Id: %s, State: %d, battery: %d", state["id"], lockProperties ["state"], lockProperties["batteryLevel"])
-                        battery_level = lockProperties["batteryLevel"]
-                        lock.set_battery_level(battery_level)
+                        lock_state = self.assign_null_or_lock_state(lockProperties)
+                        lock_batteryLevel = self.assign_null_or_lock_state(lockProperties)
+                        lock_isCharging = self.assign_null_or_lock_isCharging(lockProperties)
+                        _LOGGER.debug("Id: %s, State: %d, battery: %d", lock_state, lock_isCharging, lock_batteryLevel)
+
+                        lock.set_battery_level(lock_batteryLevel)
                         '''Todo: do something with state'''
-                        lock.set_state(lockProperties["state"])
+                        lock.set_state(lock_state)
                         break
         except KeyError:
             _LOGGER.error("result: %s", r.json())
             
-    def is_token_valid(self):
-        return self._token_valid_until > datetime.datetime.now()
-
-    def ensure_token_is_valid(self):
-        if (self.is_token_valid() == False):
-            self.get_token()
-        return self.is_token_valid() == True
-
     def find_lock(self, id):
         for lock in self._sensor_list:
             if id == lock.get_id():
                 return lock
         raise TedeeClientException("This Id not found")
-                      
-    def update(self, id):
-        if (self.is_token_valid() == False):
-            _LOGGER.debug("Need new token...")
-            self.get_token()
-        if (self.is_token_valid() == True):
-            self.get_state()
-            return self.get_battery(id)
-        else:
-            return False
-    
-auth_url = "https://tedee.b2clogin.com/tedee.onmicrosoft.com/B2C_1_SignIn_Ropc/oauth2/v2.0/token"
-auth_parameters = {
-    "grant_type": "password",
-    "scope": "openid 02106b82-0524-4fd3-ac57-af774f340979",
-    "client_id": "02106b82-0524-4fd3-ac57-af774f340979",
-    "response_type": "token" }
-auth_header = {"Content-Type": "application/x-www-form-urlencoded"}
-api_url_devices = "https://api.tedee.com/api/v1.15/my/device"
-api_url_open = "https://api.tedee.com/api/v1.15/my/lock/open"
-api_url_close = "https://api.tedee.com/api/v1.15/my/lock/close"
-api_url_pull = "https://api.tedee.com/api/v1.15/my/lock/pull-spring"
 
+    def assign_null_or_lock_state(self, value):
+        if (value == None):
+            return None;                  
+        else:
+            return value["state"]
+    
+    def assign_null_or_lock_batteryLevel(self, value):
+        if (value == None):
+            return None;                  
+        else:
+            return value["batteryLevel"]
+
+    def assign_null_or_lock_isCharging(self, value):
+        if (value == None):
+            return None;                  
+        else:
+            return value["isCharging"]            
+
+api_url_base = "https://t01-nofo-api.azurewebsites.net/api/v1.22/"
+api_url_devices = api_url_base+"my/device"
+api_url_open = api_url_base+"my/lock/"+LOCK_ID+"/operation/lock"
+api_url_close = api_url_base+"my/lock/"+LOCK_ID+"/operation/unlock"
+api_url_pull = api_url_base+"my/lock/"+LOCK_ID+"/operation/pull"
+api_url_battery = api_url_base+"my/device/"+LOCK_ID+"/battery"
+api_url_state = api_url_base+"my/lock/sync"
 
 root = logging.getLogger()
 logging.getLogger("urllib3").setLevel(logging.WARNING)
