@@ -16,4 +16,5 @@ python3 setup.py install
 
 Try it with the example.py:
 
--Edit username and password with your credentials for Tedee
+-Generate personal key. Instructions: https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key
+-Edit personalKey with generated value.
