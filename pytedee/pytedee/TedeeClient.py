@@ -195,7 +195,7 @@ class TedeeClient(object):
         else:
             return value["isCharging"]            
 
-api_url_base = "https://t01-nofo-api.azurewebsites.net/api/v1.22/"
+api_url_base = "https://api.tedee.com/api/v1.22/"
 api_url_devices = api_url_base+"my/device"
 api_url_open = api_url_base+"my/lock/"+LOCK_ID+"/operation/lock"
 api_url_close = api_url_base+"my/lock/"+LOCK_ID+"/operation/unlock"
