@@ -16,5 +16,8 @@ python3 setup.py install
 
 Try it with the example.py:
 
--Generate personal key. Instructions: https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key
--Edit personalKey with generated value.
+- Generate personal key. Instructions: https://tedee-tedee-api-doc.readthedocs-hosted.com/en/latest/howtos/authenticate.html#personal-access-key
+  Minimal scopes required for enable integration are:
+    - Devices.Read
+    - Lock.Operate
+- Edit personalKey with generated value.
