@@ -160,7 +160,7 @@ class TedeeClient(object):
                         lock.set_connected(is_connected)
                         lockProperties = state["lockProperties"]
                         lock_state = self.assign_null_or_lock_state(lockProperties)
-                        lock_batteryLevel = self.assign_null_or_lock_state(lockProperties)
+                        lock_batteryLevel = self.assign_null_or_lock_batteryLevel(lockProperties)
                         lock_isCharging = self.assign_null_or_lock_isCharging(lockProperties)
                         _LOGGER.debug("Id: %s, State: %d, battery: %d", lock_state, lock_isCharging, lock_batteryLevel)
 
@@ -176,6 +176,10 @@ class TedeeClient(object):
             if id == lock.get_id():
                 return lock
         raise TedeeClientException("This Id not found")
+
+    def update(self, id):
+        self.get_state()
+        return self.get_battery(id)
 
     def assign_null_or_lock_state(self, value):
         if (value == None):
