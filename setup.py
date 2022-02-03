@@ -12,7 +12,7 @@ setuptools.setup(
     name="pytedee", # Replace with your own username
     package_dir = {'': 'pytedee'},
     packages = ['pytedee'],
-    version="0.0.2",
+    version="0.0.3",
     author="Jörg Wolff",
     author_email="joerg.wolff@gmx.de",
     description="A Tedee Lock Client package",
