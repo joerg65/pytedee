@@ -21,3 +21,8 @@ Try it with the example.py:
     - Devices.Read
     - Lock.Operate
 - Edit personalKey with generated value.
+
+If module six generates erorr:<br/>
+Ensure module version of six is at least 1.15.0.
+
+pip3 install six==1.15.0
